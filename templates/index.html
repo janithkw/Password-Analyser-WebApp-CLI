@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Security Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .check-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .clear-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .clear-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .result {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.safe {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.pwned {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.error {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+
+        .result-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .result-message {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .result-count {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 8px;
+            color: #004085;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .toggle-password {
+            margin-top: 10px;
+        }
+
+        .toggle-password input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .toggle-password label {
+            display: inline;
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Password Security Checker</h1>
+            <p>Check if your password has been compromised</p>
+        </div>
+
+        <form id="passwordForm" onsubmit="checkPassword(event)">
+            <div class="form-group">
+                <label for="password">Enter Password:</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Enter password to check"
+                    required
+                >
+            </div>
+
+            <div class="toggle-password">
+                <input 
+                    type="checkbox" 
+                    id="showPassword"
+                    onchange="togglePasswordVisibility()"
+                >
+                <label for="showPassword">Show password</label>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="check-btn" id="checkBtn">Check Password</button>
+                <button type="button" class="clear-btn" onclick="clearForm()">Clear</button>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Checking password...</p>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="info">
+            <strong>How it works:</strong>
+            This checker uses the k-anonymity security model from HaveIBeenPwned API. 
+            Only the first 5 characters of your password's SHA-1 hash are sent to the API, 
+            ensuring your actual password remains private. Your password is never stored or logged.
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const showPassword = document.getElementById('showPassword');
+            
+            if (showPassword.checked) {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        }
+
+        async function checkPassword(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const checkBtn = document.getElementById('checkBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            if (!password.trim()) {
+                alert('Please enter a password');
+                return;
+            }
+            
+            // Disable button and show loading
+            checkBtn.disabled = true;
+            loading.style.display = 'block';
+            result.classList.remove('show');
+            
+            try {
+                const response = await fetch('/api/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ password: password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult(data);
+                } else {
+                    displayError(data.error || 'An error occurred');
+                }
+            } catch (error) {
+                displayError('Failed to check password: ' + error.message);
+            } finally {
+                checkBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            
+            if (data.is_pwned === null) {
+                resultDiv.className = 'result show error';
+                resultDiv.innerHTML = `
+                    <div class="result-title">Error</div>
+                    <div class="result-message">${data.message}</div>
+                `;
+            } else if (data.is_pwned) {
+                resultDiv.className = 'result show pwned';
+                resultDiv.innerHTML = `
+                    <div class="result-title">⚠️ Password Compromised</div>
+                    <div class="result-message">${data.message}</div>
+                    <div class="result-count">
+                        This password has been found ${data.count} times in known data breaches.
+                    </div>
+                `;
+            } else {
+                resultDiv.className = 'result show safe';
+                resultDiv.innerHTML = `
+                    <div class="result-title">✅ Password Safe</div>
+                    <div class="result-message">${data.message}</div>
+                `;
+            }
+        }
+
+        function displayError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result show error';
+            resultDiv.innerHTML = `
+                <div class="result-title">Error</div>
+                <div class="result-message">${message}</div>
+            `;
+        }
+
+        function clearForm() {
+            document.getElementById('password').value = '';
+            document.getElementById('showPassword').checked = false;
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('password').type = 'password';
+            document.getElementById('password').focus();
+        }
+
+        // Focus on password input when page loads
+        window.addEventListener('load', () => {
+            document.getElementById('password').focus();
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,10 @@
+from flask import Flask, render_template, request, jsonify
 import requests
 import hashlib
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+
+app = Flask(__name__)
 
 
 def check_password(password):
@@ -52,51 +55,41 @@ def check_password(password):
                 return {
                     'is_pwned': True,
                     'count': int(count),
-                    'message': f'Password found {count} times in breach database!'
+                    'message': f'⚠️ Password found {count} times in breach database!'
                 }
         
         return {
             'is_pwned': False,
             'count': 0,
-            'message': 'Password is safe - not found in breach database.'
+            'message': '✅ Password is safe - not found in breach database.'
         }
         
     except requests.exceptions.RequestException as e:
         return {
             'is_pwned': None,
             'count': 0,
-            'message': f'Error checking password: {str(e)}'
+            'message': f'❌ Error checking password: {str(e)}'
         }
 
 
-def main():
-    """CLI interface for password checking."""
-    print("=" * 50)
-    print("Password Security Checker")
-    print("Powered by HaveIBeenPwned API")
-    print("=" * 50)
+@app.route('/')
+def index():
+    """Render the main page."""
+    return render_template('index.html')
+
+
+@app.route('/api/check', methods=['POST'])
+def check():
+    """API endpoint to check password."""
+    data = request.get_json()
+    password = data.get('password', '').strip()
     
-    while True:
-        pwd = input("\nEnter password to check (or 'quit' to exit): ").strip()
-        
-        if pwd.lower() == 'quit':
-            print("Goodbye!")
-            break
-        
-        if not pwd:
-            print("Please enter a valid password.")
-            continue
-        
-        print("\nChecking password...")
-        result = check_password(pwd)
-        
-        if result['is_pwned'] is None:
-            print(f"⚠️  {result['message']}")
-        elif result['is_pwned']:
-            print(f"🔴 {result['message']}")
-        else:
-            print(f"🟢 {result['message']}")
+    if not password:
+        return jsonify({'error': 'Password is required'}), 400
+    
+    result = check_password(password)
+    return jsonify(result)
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
