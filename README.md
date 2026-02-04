@@ -193,7 +193,7 @@ deactivate
 
 ## License
 
-MIT License - Feel free to use this project for educational purposes.
+GNU General Public License v3.0 - This project is free software; you can redistribute it and/or modify it under the terms of the GNU GPL v3.0 as published by the Free Software Foundation.
 
 ## Disclaimer
 
